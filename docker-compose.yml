@@ -1,0 +1,35 @@
+services:
+  bot:
+    build: ./bot
+    working_dir: /app
+    command: >
+      uv run watchmedo auto-restart
+      --pattern="*.py,.env"
+      --recursive --
+      python src/main.py
+    restart: always
+
+    volumes:
+      - ./tmp:/app/data
+    
+    develop:
+      watch:
+        - action: sync
+          path: ./bot
+          target: /app
+          ignore:
+            - .venv/
+            - __pycache__/
+
+        - action: rebuild
+          path: ./bot/uv.lock
+
+        - action: rebuild
+          path: ./bot/.env
+
+  server:
+    build: ./server
+    working_dir: /app
+    restart: unless-stopped
+    ports:
+      - "9865:9865"

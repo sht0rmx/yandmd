@@ -1,0 +1,147 @@
+{
+  "lang-alias": "en",
+  "lang-name": "English",
+  "messages": {
+    "start": {
+      "msg": [
+        "Hello {user}!\n",
+        "Send a link to a track or playlist from Yandex Music. 🎵\n\n",
+        "I can download the track or show its details.\n",
+        "Use /help for more information."
+      ],
+      "inline": {
+        "1": {
+          "/help": "command:help"
+        }
+      }
+    },
+
+    "help": {
+      "msg": [
+        "Available commands:\n\n",
+        "/auth — connect your Yandex Music account\n",
+        "• Just send a Yandex Music link to get the track\n",
+        "• /now — send the currently playing track\n\n",
+        "Inline mode (@botname…):\n",
+        "• `audio` — send the current track as an audio file\n",
+        "• `text` — show track information\n",
+        "• `music.yandex.ru/…` — send a track by link"   
+      ],
+      "inline": {
+        "1": {
+          "Back": "command:start"
+        }
+      }
+    },
+
+    "auth-request": {
+      "msg": [
+        "Please send your Yandex Music API key.\n",
+        "You can cancel this action at any time using /back."
+      ],
+      "inline": {
+        "1": {
+          "How do I get the key?": "link::https://github.com/MarshalX/yandex-music-api/discussions/513#discussioncomment-2729781"
+        }
+      }
+    },
+
+    "auth-only-private": {
+      "msg": [
+        "For security reasons, authorization is available in private messages only."
+      ]
+    },
+
+    "auth-already": {
+      "msg": [
+        "An API key is already connected.\n",
+        "Would you like to replace it?"
+      ],
+      "key": {
+        "1": ["Yes", "No"]
+      }
+    },
+
+    "auth-checkout": {
+      "msg": [
+        "Verifying the API key, please wait…"
+      ]
+    },
+
+    "change-pm": "🗝️ Authorize",
+
+    "auth-checkout-fail": {
+      "msg": [
+        "The provided API key could not be verified.\n",
+        "Please try again using /auth."
+      ]
+    },
+
+    "auth-checkout-success": {
+      "msg": [
+        "Authorization completed successfully."
+      ]
+    },
+
+    "auth-required": {
+      "msg": [
+        "Authorization is required to continue.\n",
+        "Please use /auth."
+      ],
+      "inline": {
+        "1": {
+          "/auth": "command:auth"
+        }
+      }
+    },
+
+    "close-response": {
+      "msg": [
+        "The action has been cancelled."
+      ]
+    },
+
+    "no-answer": {
+      "msg": [
+        "Alright."
+      ]
+    },
+
+    "answers": {
+      "yes": "yes",
+      "no": "no"
+    },
+
+    "cancel": ["/back", "/close", "/cancel"],
+
+    "inline-error": "An error occurred",
+    "error-fetching": "An error occurred while fetching the track.",
+
+    "inline-audio": "Audio",
+    "send-audio": "`audio` — send the audio file",
+
+    "inline-text": "Text",
+    "send-text": "`text` — show track information",
+
+    "inline-link": "Track via Y.M link",
+    "send-by-link": "`https://music.yandex.ru...` — get text or audio by link",
+
+    "track-not-found": {
+      "msg": [
+        "Sorry, the requested track could not be found."
+      ]
+    },
+
+    "track-downloading": {
+      "msg": [
+        "Downloading the track, please wait…"
+      ]
+    },
+
+    "track-fetch-error": {
+      "msg": [
+        "An error occurred while retrieving the track."
+      ]
+    }
+  }
+}
