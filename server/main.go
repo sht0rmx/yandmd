@@ -20,7 +20,6 @@ func main() {
 func tokenGIN(c *gin.Context) {
 	token := c.Request.Header.Get(AUTH_HEADER)
 
-	// чуть чуть проверки токена
 	token, ok := strings.CutPrefix(token, "OAuth ")
 	if !ok {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
@@ -29,7 +28,6 @@ func tokenGIN(c *gin.Context) {
 		return
 	}
 
-	// канал, куда будем отправлять данные по готовности
 	done := make(chan ynison.PutYnisonStateResponse, 1)
 
 	y := ynison.NewClient(token)

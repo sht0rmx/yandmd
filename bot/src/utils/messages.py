@@ -3,7 +3,7 @@ from typing import Any
 
 from aiogram import types
 
-from bot.utils.translate import translations
+from utils.translate import translations
 from utils import bot
 from utils.logging import logger
 

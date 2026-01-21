@@ -1,0 +1,18 @@
+FROM golang:1.25.6-alpine AS builder
+ENV CGO_ENABLED=0 \
+    GOOS=linux
+WORKDIR /app
+
+COPY go.mod go.sum* ./
+RUN go mod download
+
+COPY . .
+RUN go build -ldflags "-s -w" -o goxray_cli main.go
+
+FROM alpine:latest
+RUN apk add --no-cache ca-certificates iproute2 sudo
+WORKDIR /app
+COPY --from=builder /app/goxray_cli .
+RUN chmod +x ./goxray_cli
+
+ENTRYPOINT ["/bin/sh", "-c", "./goxray_cli ${XRAY_CONFIG_URL}"]
