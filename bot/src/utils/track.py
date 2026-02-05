@@ -5,9 +5,10 @@ import requests
 from odesli.Odesli import Odesli
 from yandex_music import ClientAsync, Track
 
+from db.engine import db_client
 from utils import logger
 
-_TRACK_RE = re.compile(r'(?:track/|album/\d+/track/)(\d+)')
+_TRACK_RE = re.compile(r"(?:track/|album/\d+/track/)(\d+)")
 
 
 class TrackData(NamedTuple):
@@ -27,14 +28,22 @@ def extract_track_id(text: str) -> int:
 
 
 def fetch_now_playing_track_id(api_key: str) -> int | None:
-    data = requests.get("http://server:9865/get_current_track_alpha", headers={"Authorization": f"OAuth {api_key}"})
+    data = requests.get(
+        "http://server:9865/get_current_track_alpha",
+        headers={"Authorization": f"OAuth {api_key}"},
+    )
+    logger.info(
+        f"fetch_now_playing_track_id response: {data.status_code} - {data.text}"
+    )
     if data.status_code != 200:
         return None
     json_data = data.json()
     return json_data.get("track_id")
 
 
-async def get_now_playing_track(api_key: str, query: str | None=None) -> TrackData:
+async def get_now_playing_track(
+    api_key: str, userid: int, query: str | None = None
+) -> TrackData:
     if query is None:
         track_id = fetch_now_playing_track_id(api_key)
     else:
@@ -43,14 +52,14 @@ async def get_now_playing_track(api_key: str, query: str | None=None) -> TrackDa
     if not track_id:
         raise ValueError("No track ID found")
 
-    track = await fetch_track(api_key, track_id)
+    track = await fetch_track(api_key, track_id, userid)
     if not track:
         raise ValueError("Error fetching track")
 
     return track
 
 
-async def fetch_track(api_key: str, track_id: int) -> TrackData | None:
+async def fetch_track(api_key: str, track_id: int, userid: int) -> TrackData | None:
     try:
         client = await ClientAsync(api_key).init()
         tracks = await client.tracks([track_id])
@@ -65,10 +74,20 @@ async def fetch_track(api_key: str, track_id: int) -> TrackData | None:
         url = await download_info[0].get_direct_link_async()
 
         title = track.title + (f" ({track.version})" if track.version else "")
-        artist = ", ".join([artist.name for artist in track.artists]) if track.artists else "Unknown"
-        album = ", ".join([album.title for album in track.albums]) if track.albums else "Single"
+        artist = (
+            ", ".join([artist.name for artist in track.artists])
+            if track.artists
+            else "Unknown"
+        )
+        album = (
+            ", ".join([album.title for album in track.albums])
+            if track.albums
+            else "Single"
+        )
         ya_link = f"https://music.yandex.ru/album/{track.albums[0].id}/track/{track.id}"
-        cover_url = track.cover_uri.replace("%%", "1000x1000") if track.cover_uri else None
+        cover_url = (
+            track.cover_uri.replace("%%", "1000x1000") if track.cover_uri else None
+        )
 
         songlink = None
         try:
@@ -76,6 +95,7 @@ async def fetch_track(api_key: str, track_id: int) -> TrackData | None:
         except Exception:
             pass
 
+        await db_client.download_track(userid)
         return TrackData(
             track_id=track.id,
             track_url=url,

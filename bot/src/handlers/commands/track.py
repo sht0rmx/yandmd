@@ -4,7 +4,7 @@ import tempfile
 import aiohttp
 from aiogram import F, types
 from aiogram.filters import Command
-from aiogram.types import InputFile
+from aiogram.types import FSInputFile
 from mutagen.id3 import APIC, ID3, TIT2, TPE1, USLT
 from mutagen.mp3 import MP3
 
@@ -46,29 +46,21 @@ async def embed_tags(file_path, track):
                 audio.tags.add(APIC(
                     encoding=3,
                     mime='image/jpeg',
-                    type=3,  # front cover
+                    type=3,
                     desc='cover',
                     data=cover_data
                 ))
 
     audio.save()
 
-@router.message(Command("now"))
-async def send_now_track(msg: types.Message):
-    user = await db_client.get_user(msg.from_user.id)
-
-    if not user or not await db_client.check_auth(msg.from_user.id):
-        await msg.answer(**await get_data(msg, "auth-required"))
-        return
-
-    track_id = fetch_now_playing_track_id(user.api_key)
+async def send_file(track_id: int, msg: types.Message, user: types.User):
     if not track_id:
         await msg.answer(**await get_data(msg, "track-not-found"))
         return
 
     progress = await msg.answer(**await get_data(msg, "track-downloading"))
 
-    track = await fetch_track(user.api_key, track_id)
+    track = await fetch_track(user.api_key, track_id, user.id)
     if not track:
         await progress.edit_text(**await get_data(msg, "track-fetch-error"))
         return
@@ -81,13 +73,25 @@ async def send_now_track(msg: types.Message):
     await embed_tags(file_path, track)
 
     await msg.answer_audio(
-        audio=InputFile(file_path),
+        audio=FSInputFile(file_path),
         title=track.title,
         performer=track.artist,
     )
 
     await progress.delete()
     os.remove(file_path)
+
+
+@router.message(Command("now"))
+async def send_now_track(msg: types.Message):
+    user = await db_client.get_user(msg.from_user.id)
+
+    if not user or not await db_client.check_auth(msg.from_user.id):
+        await msg.answer(**await get_data(msg, "auth-required"))
+        return
+
+    await send_file(fetch_now_playing_track_id(user.api_key), msg, user)
+
 
 
 @router.message(
@@ -100,30 +104,4 @@ async def handle_track_link(msg: types.Message):
         await msg.answer(**await get_data(msg, "auth-required"))
         return
 
-    track_id = extract_track_id(msg.text)
-    if not track_id:
-        await msg.answer(**await get_data(msg, "track-not-found"))
-        return
-
-    progress = await msg.answer(**await get_data(msg, "track-downloading"))
-
-    track = await fetch_track(user.api_key, track_id)
-    if not track:
-        await progress.edit_text(**await get_data(msg, "track-fetch-error"))
-        return
-
-    file_path = await download_track(track)
-    if not file_path:
-        await progress.edit_text(**await get_data(msg, "track-download-error"))
-        return
-
-    await embed_tags(file_path, track)
-
-    await msg.answer_audio(
-        audio=InputFile(file_path),
-        title=track.title,
-        performer=track.artist,
-    )
-
-    await progress.delete()
-    os.remove(file_path)
+    await send_file(extract_track_id(msg.text), msg, user)

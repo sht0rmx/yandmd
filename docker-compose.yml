@@ -1,28 +1,30 @@
 services:
-  tun:
-    build: ./goxray
-    working_dir: /app
-    cap_add:
-      - NET_ADMIN
-    devices:
-      - /dev/net/tun:/dev/net/tun
-    networks:
-      - vpn_net
-    restart: unless-stopped
-    environment:
-      - XRAY_CONFIG_URL=${VLESS_LINK}
+  #  tun:
+  #    build:
+  #      context: ./goxray
+  #    working_dir: /app
+  #    cap_add:
+  #      - NET_ADMIN
+  #    devices:
+  #      - /dev/net/tun:/dev/net/tun
+  #    networks:
+  #      - vpn_net
+  #    restart: unless-stopped
+  #    environment:
+  #      - XRAY_CONFIG_URL=${VLESS_LINK}
 
   bot:
-    build: ./bot
+    build:
+      context: ./bot
     working_dir: /app
-    command: > 
+    command: >
       uv run watchmedo auto-restart --pattern="*.py,.env" --recursive -- python src/main.py
     restart: always
-    network_mode: "service:tun"
-    depends_on:
-      - tun
+    #network_mode: "service:tun"
+    #depends_on:
+    #  - tun
     volumes:
-      - ./tmp:/app/data
+      - bot_data:/app/data
     environment:
       - BOT_TOKEN=${BOT_TOKEN}
       - DATABASE_URL=${DATABASE_URL}
@@ -36,17 +38,19 @@ services:
             - __pycache__/
         - action: rebuild
           path: ./bot/uv.lock
-        - action: rebuild
-          path: ./bot/.env
 
   server:
-    build: ./server
+    build:
+      context: ./server
     working_dir: /app
     restart: unless-stopped
-    network_mode: "service:tun"
-    depends_on:
-      - tun
+    #network_mode: "service:tun"
+    #depends_on:
+    #  - tun
 
-networks:
-  vpn_net:
-    driver: bridge
+#networks:
+#  vpn_net:
+#    driver: bridge
+
+volumes:
+  bot_data:

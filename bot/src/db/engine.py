@@ -42,9 +42,15 @@ class Database:
         await self.engine.dispose()
 
     # User
-    async def get_user(self, telegram_id: int) -> User | None:
+    async def get_user(self, telegram_id: int|None = None, id: int|None = None) -> User | None:
         async with self.async_session() as dbsession:
-            result = await dbsession.execute(select(User).where(User.telegram_id == telegram_id))
+            q = select(User)
+            if telegram_id:
+                q = q.where(User.telegram_id == telegram_id)
+            elif id:
+                q = q.where(User.id == id)
+                
+            result = await dbsession.execute(q)
             return result.scalar_one_or_none()
 
     async def create_user(
@@ -81,11 +87,28 @@ class Database:
 
     async def update_user_locale(self, telegram_id: int, locale_alias: str) -> None:
         async with self.async_session() as dbsession:
-            result = await dbsession.execute(select(User).where(User.telegram_id == telegram_id))
-            user = result.scalar_one_or_none()
-            if not user:
+            result = await dbsession.execute(
+                update(User)
+                .where(User.telegram_id == telegram_id)
+                .values(locale_alias=locale_alias)
+            )
+
+            if not result == 0:
                 raise NotFound(f"User {telegram_id} not found")
-            user.locale_alias = locale_alias
+
+            await dbsession.commit()
+
+    async def download_track(self, id: int) -> None:
+        user = await self.get_user(id=id)
+        if not user:
+            raise logger.error(f"User {id} not found")
+
+        async with self.async_session() as dbsession:
+            await dbsession.execute(
+                update(User)
+                .where(User.id == id)
+                .values(total_tracks=user.total_tracks+1)
+            )
             await dbsession.commit()
 
     async def update_user_last_seen(self, telegram_id: int) -> None:

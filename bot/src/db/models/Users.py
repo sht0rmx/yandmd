@@ -20,3 +20,4 @@ class User(Base):
     locale_alias = Column(String(2))
     last_seen = Column(DateTime, default=func.now())
     created_at = Column(DateTime, default=func.now())
+    total_tracks = Column(BigInteger, default=0)

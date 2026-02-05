@@ -11,7 +11,8 @@
       ],
       "inline": {
         "1": {
-          "/help": "command:help"
+          "/help": "command:help",
+          "stats": "command:stats"
         }
       }
     },

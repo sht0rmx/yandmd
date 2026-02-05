@@ -8,6 +8,7 @@
 go.work
 go.work.sum
 .env
+.env.dev
 __pycache__/
 *.py[cod]
 *$py.class
